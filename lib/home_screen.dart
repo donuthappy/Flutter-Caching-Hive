@@ -14,6 +14,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<PostsModel> listPosts = [];
   bool isLoading = false;
+  int curIndex = 0;
+  final AppinioSwiperController _controller = AppinioSwiperController();
 
   late final PostsRepository _postsRepository = PostsRepository();
 
@@ -49,7 +51,8 @@ class _HomeScreenState extends State<HomeScreen> {
           isLoading = false;
         });
       } else if (nExist == 0) {
-        print('Loading from API start because of error...');
+        print(
+            'Loading from API start because of error..........................');
         final serverResponse = await _postsRepository.getPosts();
         listPosts = serverResponse;
         setState(() {
@@ -68,110 +71,172 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Posts ${listPosts.length}'),
+        title: Text('All Listings ${listPosts.length} '),
         centerTitle: true,
       ),
       body: isLoading
           ? const Center(
               child: CircularProgressIndicator(),
             )
-          : Container(
-              padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 50),
-              child: AppinioSwiper(
-                cardCount: listPosts.length,
-                cardBuilder: (context, index) {
-                  final post = listPosts[index];
-                  return Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xff12253C).withOpacity(0.05),
-                          blurRadius: 4,
-                          offset: const Offset(2, 4), // Shadow position
+          : Column(children: [
+              const SizedBox(
+                height: 20,
+              ),
+              Text(
+                '${curIndex + 1}/${listPosts.length}',
+                style: const TextStyle(
+                    color: Color(0xff142B46),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(50, 0, 50, 0),
+                  child: AppinioSwiper(
+                    controller: _controller,
+                    backgroundCardCount: 2,
+                    cardCount: listPosts.length,
+                    onSwipeEnd: _swipeEnd,
+                    swipeOptions: const SwipeOptions.symmetric(
+                        horizontal: true, vertical: false),
+                    cardBuilder: (context, index) {
+                      final post = listPosts[index];
+                      return Container(
+                        decoration: BoxDecoration(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(10)),
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xff12253C).withOpacity(0.05),
+                              blurRadius: 4,
+                              offset: const Offset(2, 4), // Shadow position
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CachedNetworkImage(
-                          width: double.infinity,
-                          height: 600,
-                          imageUrl:
-                              post.images!.isNotEmpty ? post.images![0] : "",
-                          imageBuilder: (context, imageProvider) => Container(
-                            decoration: BoxDecoration(
-                              borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(10),
-                                  topRight: Radius.circular(10)),
-                              image: DecorationImage(
-                                image: imageProvider,
-                                fit: BoxFit.cover,
+                        alignment: Alignment.center,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CachedNetworkImage(
+                              width: double.infinity,
+                              height: 500,
+                              imageUrl: post.images!.isNotEmpty
+                                  ? post.images![0]
+                                  : "https://firebasestorage.googleapis.com/v0/b/openfair-app.appspot.com/o/assets%2Fcanadian-bg.png?alt=media",
+                              imageBuilder: (context, imageProvider) =>
+                                  Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(10),
+                                      topRight: Radius.circular(10)),
+                                  image: DecorationImage(
+                                    image: imageProvider,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                              placeholder: (context, url) {
+                                return Container(
+                                  width: double.infinity,
+                                  height: 600,
+                                  color: Colors.white60,
+                                );
+                              },
+                            ),
+                            const SizedBox(
+                              height: 20,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 10),
+                              child: Text(
+                                '${post.businessName}',
+                                style: const TextStyle(
+                                    color: Color(0xff142B46),
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 20),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
                               ),
                             ),
-                          ),
-                          placeholder: (context, url) {
-                            return Container(
-                              width: double.infinity,
-                              height: 600,
-                              color: Colors.white60,
-                            );
-                          },
+                            const SizedBox(
+                              height: 15,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 10),
+                              child: Text(
+                                '${post.country}',
+                                style: const TextStyle(
+                                    color: Color(0xff142B46),
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 15,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 10),
+                              child: Text(
+                                '${post.description}',
+                                style: const TextStyle(
+                                    color: Color(0xff142B46),
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10),
-                          child: Text(
-                            '${post.businessName}',
-                            style: const TextStyle(
-                                color: Color(0xff142B46),
-                                fontWeight: FontWeight.w600,
-                                fontSize: 20),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 15,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10),
-                          child: Text(
-                            '${post.country}',
-                            style: const TextStyle(
-                                color: Color(0xff142B46),
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 15,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10),
-                          child: Text(
-                            '${post.description}',
-                            style: const TextStyle(
-                                color: Color(0xff142B46),
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                      );
+                    },
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(
+                height: 30,
+              ),
+              InkWell(
+                onTap: () {
+                  _controller.unswipe();
+                },
+                child: const Icon(Icons.restore_outlined),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+            ]),
     );
+  }
+
+  void _swipeEnd(int previousIndex, int targetIndex, SwiperActivity activity) {
+    switch (activity) {
+      case Swipe():
+        print('The card was swiped to the : ${activity.direction}');
+        print('previous index: $previousIndex, target index: $targetIndex');
+        setState(() {
+          curIndex = targetIndex;
+        });
+        break;
+      case Unswipe():
+        print('A ${activity.direction.name} swipe was undone.');
+        print('previous index: $previousIndex, target index: $targetIndex');
+        setState(() {
+          curIndex = targetIndex;
+        });
+        break;
+      case CancelSwipe():
+        print('A swipe was cancelled');
+        break;
+      case DrivenActivity():
+        print('Driven Activity');
+        break;
+    }
   }
 }
